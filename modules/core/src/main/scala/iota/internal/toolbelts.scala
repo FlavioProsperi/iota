@@ -162,6 +162,15 @@ private[internal] sealed trait TypeListParsers { self: Toolbelt with TypeListAST
     DropSym    = symbolOf[iota.TListK.Op.Drop[Nothing, Nothing]],
     RemoveSym  = symbolOf[iota.TListK.Op.Remove[Nothing, Nothing]])
 
+  final lazy val tlisthParser: TypeListParser = typeListParser(
+    NilSym     = symbolOf[iota.TNilH],
+    ConsSym    = symbolOf[iota.TConsH[Nothing, Nothing]],
+    ConcatSym  = symbolOf[iota.TListH.Op.Concat[Nothing, Nothing]],
+    ReverseSym = symbolOf[iota.TListH.Op.Reverse[Nothing]],
+    TakeSym    = symbolOf[iota.TListH.Op.Take[Nothing, Nothing]],
+    DropSym    = symbolOf[iota.TListH.Op.Drop[Nothing, Nothing]],
+    RemoveSym  = symbolOf[iota.TListH.Op.Remove[Nothing, Nothing]])
+
   private[this] def symbolOf[T](implicit evT: WeakTypeTag[T]): Symbol = evT.tpe.typeSymbol
 
   private[internal] def typeListParser(
@@ -234,6 +243,11 @@ private[internal] sealed trait TypeListBuilders { self: Toolbelt with TypeListAS
       weakTypeOf[TConsK[Nothing, _]].typeConstructor,
       weakTypeOf[TNilK])
 
+  final lazy val buildTListH: TypeListBuilder =
+    typeListBuilder(
+      weakTypeOf[TConsH[Nothing, _]].typeConstructor,
+      weakTypeOf[TNilH])
+
   private[internal] def typeListBuilder(
     consTpe: Type,
     nilTpe: Type
@@ -270,6 +284,11 @@ private[internal] sealed trait TypeListAPIs
 
   final def tlistkTypeConstructors(tpe: Type): Either[Id[String], List[Type]] =
     tlistkTypes(tpe).map(_.map(_.etaExpand.resultType))
+
+  final def tlisthTypes(tpe: Type): Either[Id[String], List[Type]] =
+    hyloM(tpe)(
+      evalTree.generalizeM[Either[Id[String], ?]],
+      tlisthParser)
 
 }
 
@@ -376,7 +395,7 @@ private[internal] sealed trait TypeListMacroAPIs extends TypeListAPIs { self: Ma
     !c.inferImplicitValue(typeOf[debug.optionTypes.ShowTrees], true).isEmpty
 
   def foldAbort[F[_]: Foldable, T](
-    either: Either[F[String], Tree],
+    either    : Either[F[String], Tree],
     isImplicit: Boolean = false
   ): c.Expr[T] =
     either fold (
@@ -412,4 +431,7 @@ private[internal] sealed trait TypeListMacroAPIs extends TypeListAPIs { self: Ma
 
   def memoizedTListKTypes(tpe: Type): Either[Id[String], List[Type]] =
     memoize(IotaMacroToolbelt.typeListCache)(tpe, tlistkTypes)
+
+  def memoizedTListHTypes(tpe: Type): Either[Id[String], List[Type]] =
+    memoize(IotaMacroToolbelt.typeListCache)(tpe, tlisthTypes)
 }

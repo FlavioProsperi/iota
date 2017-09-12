@@ -28,7 +28,8 @@ package object iota {
     */
   type TCons[H, T <: TList] <: TList
 
-  /** The terminal element of a type constructor list */
+
+  /** The terminal element of a type constructor list of shape K: `T[_]` */
   type TNilK <: TListK
 
   /** A type constructor list characterized by a head type
@@ -38,6 +39,19 @@ package object iota {
     * @tparam T the list of tail type constructors
     */
   type TConsK[H[_], T <: TListK] <: TListK
+
+
+  /** The terminal element of a type constructor list of shape H: `T[_[_]]` */
+  type TNilH <: TListH
+
+  /** A type constructor list characterized by a head type
+    * constructor and a list of tail type constructors
+    *
+    * @tparam H the head type constructor
+    * @tparam T the list of tail type constructors
+    */
+  type TConsH[H[_[_]], T <: TListH] <: TListH
+
 
   //#+2.11
   private[iota] implicit final class EitherCompatOps[A, B](
